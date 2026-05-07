@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>RICHATEX</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+
+body{
+  font-family:Arial;
+  background:#f4f4f4;
+  padding:20px;
+}
+
+.container{
+  background:white;
+  max-width:800px;
+  margin:auto;
+  padding:20px;
+  border-radius:10px;
+}
+
+h1{
+  text-align:center;
+  color:#800020;
+  margin-bottom:0;
+  font-size:42px;
+}
+
+.sub{
+  text-align:center;
+  margin-bottom:20px;
+  color:#800020;
+  font-size:22px;
+  font-weight:bold;
+}
+
+input{
+  width:100%;
+  padding:15px;
+  margin-bottom:10px;
+  font-size:18px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button{
+  width:100%;
+  padding:15px;
+  color:white;
+  border:none;
+  font-size:18px;
+  cursor:pointer;
+  margin-bottom:10px;
+  border-radius:8px;
+}
+
+.btn-add{
+  background:#28a745;
+}
+
+.btn-undo{
+  background:#ff9800;
+}
+
+.btn-pdf{
+  background:#007bff;
+}
+
+.total{
+  background:#800020;
+  color:white;
+  padding:15px;
+  text-align:center;
+  margin-bottom:15px;
+  font-size:22px;
+  border-radius:10px;
+  font-weight:bold;
+}
+
+.item{
+  background:#eee;
+  padding:10px;
+  margin-bottom:5px;
+  border-radius:5px;
+  font-size:18px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>RICHATEX</h1>
+
+<div class="sub">
+Control de Rollos
+</div>
+
+<input type="text" id="cliente" placeholder="Cliente">
+
+<input type="text" id="operador" placeholder="Operador">
+
+<input
+type="text"
+id="codigo"
+placeholder="Código Cliente / Remito"
+>
+
+<div id="fecha" style="margin-bottom:15px;font-size:20px;"></div>
+
+<div class="total">
+
+TOTAL ROLLOS:
+<span id="totalRollos">0</span>
+
+|
+
+TOTAL KG:
+<span id="totalKg">0.00</span>
+
+</div>
+
+<input
+type="text"
+id="kg"
+placeholder="Ingresar kilos"
+inputmode="decimal"
+>
+
+<button class="btn-add" onclick="agregar()">
+AGREGAR
+</button>
+
+<button class="btn-undo" onclick="deshacer()">
+DESHACER ÚLTIMO
+</button>
+
+<button class="btn-pdf" onclick="guardarPDF()">
+GUARDAR PDF
+</button>
+
+<div id="lista"></div>
+
+</div>
+
+<script>
+
+let rollos=[];
+
+function cargarFecha(){
+
+let hoy=new Date();
+
+document.getElementById('fecha').innerHTML=
+`Fecha: ${hoy.toLocaleDateString()}`;
+
+}
+
+cargarFecha();
+
+function agregar(){
+
+let input=document.getElementById('kg');
+
+let valor=input.value.trim().replace(',','.');
+
+let numero=parseFloat(valor);
+
+if(isNaN(numero)){
+
+  alert('Número inválido');
+
+  return;
+
+}
+
+rollos.push(numero);
+
+input.value='';
+
+actualizar();
+
+}
+
+function actualizar(){
+
+let lista=document.getElementById('lista');
+
+lista.innerHTML='';
+
+let total=0;
+
+rollos.forEach((kg,index)=>{
+
+  total+=kg;
+
+  lista.innerHTML+=
+  `
+  <div class="item">
+  ${index+1}) ${kg.toFixed(2)} kg
+  </div>
+  `;
+
+});
+
+document.getElementById('totalKg').innerText=
+total.toFixed(2);
+
+document.getElementById('totalRollos').innerText=
+rollos.length;
+
+}
+
+function deshacer(){
+
+rollos.pop();
+
+actualizar();
+
+}
+
+document.getElementById('kg')
+.addEventListener('keypress',function(e){
+
+if(e.key==='Enter'){
+
+  agregar();
+
+}
+
+});
+
+async function guardarPDF(){
+
+const { jsPDF } = window.jspdf;
+
+let doc=new jsPDF('landscape');
+
+let cliente=
+document.getElementById('cliente').value;
+
+let operador=
+document.getElementById('operador').value;
+
+let codigo=
+document.getElementById('codigo').value;
+
+let fecha=
+document.getElementById('fecha').innerText;
+
+let totalKg=
+document.getElementById('totalKg').innerText;
+
+doc.setFontSize(26);
+
+doc.setTextColor(128,0,32);
+
+doc.text('RICHATEX',148,15,{align:'center'});
+
+doc.setFontSize(14);
+
+doc.setTextColor(0,0,0);
+
+doc.text(`Cliente: ${cliente}`,10,30);
+
+doc.text(`Operador: ${operador}`,10,38);
+
+doc.text(`Código: ${codigo}`,10,46);
+
+doc.text(`${fecha}`,10,54);
+
+doc.setFontSize(16);
+
+doc.text(`TOTAL ROLLOS: ${rollos.length}`,10,68);
+
+doc.text(`TOTAL KG: ${totalKg} kg`,10,76);
+
+let filas=45;
+
+let anchoColumna=70;
+
+let inicioX=10;
+
+let inicioY=95;
+
+doc.setFontSize(10);
+
+rollos.forEach((kg,index)=>{
+
+let columna=Math.floor(index/filas);
+
+let fila=index%filas;
+
+let x=inicioX+(columna*anchoColumna);
+
+let y=inicioY+(fila*5);
+
+doc.text(
+`${index+1}) ${kg.toFixed(2)} kg`,
+x,
+y
+);
+
+});
+
+let nombreArchivo =
+codigo || 'RICHATEX-Rollos';
+
+doc.save(`${nombreArchivo}.pdf`);
+
+}
+
+</script>
+
+</body>
+
+</html>
