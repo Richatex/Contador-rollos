@@ -110,11 +110,18 @@ Control de Rollos
 
 <input type="text" id="operador" placeholder="Operador">
 
-<input
-type="text"
-id="codigo"
-placeholder="Código Cliente / Remito"
->
+<textarea
+id="observaciones"
+placeholder="Observaciones"
+style="
+width:100%;
+height:80px;
+padding:15px;
+margin-bottom:10px;
+font-size:18px;
+border-radius:8px;
+border:1px solid #ccc;">
+</textarea>
 
 <div id="fecha" style="margin-bottom:15px;font-size:20px;"></div>
 
@@ -148,7 +155,16 @@ DESHACER ÚLTIMO
 <button class="btn-pdf" onclick="guardarPDF()">
 GUARDAR PDF
 </button>
-
+<div id="mensaje" style="
+display:none;
+background:#28a745;
+color:white;
+padding:10px;
+border-radius:8px;
+text-align:center;
+font-weight:bold;
+margin-bottom:10px;">
+</div>
 <div id="lista"></div>
 
 </div>
@@ -190,7 +206,17 @@ input.value='';
 
 actualizar();
 
-}
+let msg=document.getElementById('mensaje');
+
+msg.innerHTML=`✓ Agregado: ${numero.toFixed(2)} kg`;
+
+msg.style.display='block';
+
+setTimeout(()=>{
+  msg.style.display='none';
+},1000);
+
+input.focus();}
 
 function actualizar(){
 
@@ -252,8 +278,8 @@ document.getElementById('cliente').value;
 let operador=
 document.getElementById('operador').value;
 
-let codigo=
-document.getElementById('codigo').value;
+let observaciones=
+document.getElementById('observaciones').value;
 
 let fecha=
 document.getElementById('fecha').innerText;
@@ -275,7 +301,12 @@ doc.text(`Cliente: ${cliente}`,10,30);
 
 doc.text(`Operador: ${operador}`,10,38);
 
-doc.text(`Código: ${codigo}`,10,46);
+const obsTexto = doc.splitTextToSize(
+  `Observaciones: ${observaciones}`,
+  260
+);
+
+doc.text(obsTexto,10,46);
 
 doc.text(`${fecha}`,10,54);
 
@@ -313,10 +344,10 @@ y
 
 });
 
-let nombreArchivo =
-codigo || 'RICHATEX-Rollos';
+let clienteArchivo =
+cliente || 'Cliente';
 
-doc.save(`${nombreArchivo}.pdf`);
+doc.save(`RICHATEX-${clienteArchivo}.pdf`);
 
 }
 
